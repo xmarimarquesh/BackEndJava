@@ -7,11 +7,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.yaml.snakeyaml.util.ArrayUtils;
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 
 import java.util.ArrayList;
 
@@ -20,10 +15,15 @@ import com.example.demo.dto.Curitiba;
 import com.example.demo.dto.Current;
 import com.example.demo.dto.Reverse;
 import com.example.demo.services.ReverseService;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+// import com.google.gson.JsonObject;
+// import com.google.gson.JsonParser;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+// import java.util.concurrent.atomic.AtomicBoolean;
+// import org.yaml.snakeyaml.util.ArrayUtils;
+
+// import java.net.URI;
+// import java.net.http.HttpClient;
+// import java.net.http.HttpResponse;
 
 @CrossOrigin(origins = {"http://localhost:5257"})
 @RestController
