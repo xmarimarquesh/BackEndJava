@@ -67,18 +67,52 @@ public class BackController {
     }
 
     @GetMapping("/curitiba")
-    public Curitiba curitiba(String cep, String cpf){
-        String[] cpf_str = new String[12];
+    public ResponseEntity<Curitiba> curitiba(String cep, String cpf){
+        String[] cpf_str = cpf.split("");
 
-        cpf_str = cpf.split("");
+        Integer[] cpf_int = new Integer[cpf_str.length - 2]; 
 
-        for(int i = 0; i< cpf_str.length; i++){
-            System.out.println(cpf_str[i]);
+        for (int i = 0; i < cpf_str.length - 2; i++) {
+            cpf_int[i] = Integer.parseInt(cpf_str[i]);
         }
 
-        ArrayList<String> list = new ArrayList<>();
-        list.add(cpf);
+        int soma = 0;
+        for (int i = 1; i < cpf_int.length; i++) {
+            soma += cpf_int[i-1] * i;
+        }
 
+        int d1 = soma % 11;
+
+        if(d1 == 10){
+            d1 = 0;
+        }
+
+        soma = 0;
+        for (int i = 0; i < cpf_int.length; i++) {
+            soma += cpf_int[i] * i;
+        }
+
+        int d2 = soma % 11;
+
+        if(d2 == 10){
+            d2 = 0;
+        }
+
+        // ArrayList<String> list = new ArrayList<>();
+        String mss = new String();
+        
+        if(cpf_str[10].equals(String.valueOf(d1)) && cpf_str[11].equals(String.valueOf(d2))){
+            // list.add("CPF CORRETO!");
+            mss = "CPF CORRETO!";
+        }else{
+            // list.add("CPF INCORRETO!");
+            mss = "CPF INCORRETO!";
+        }
+        
+        // list.add("Ta");
+        
+        return ResponseEntity.ok(new Curitiba(mss));
+        
         // ------------------ REQUISIÇÃO PARA VALIDAR SE CEP É DE CWB
         // String url = "https://viacep.com.br/ws/" + cep + "/json/";
         // AtomicBoolean isCwb = new AtomicBoolean(false);
@@ -104,7 +138,6 @@ public class BackController {
         // if(!isCwb.get())
         //     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        return new Curitiba(list);
     }
 
 }
