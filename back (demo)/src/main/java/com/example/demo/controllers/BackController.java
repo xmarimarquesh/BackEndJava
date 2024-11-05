@@ -1,6 +1,5 @@
 package com.example.demo.controllers;
 
-import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,11 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dto.Calculo;
 import com.example.demo.dto.Curitiba;
 import com.example.demo.dto.Current;
+import com.example.demo.dto.Login;
 import com.example.demo.dto.PersonDto;
 import com.example.demo.dto.Reverse;
+import com.example.demo.dto.Token;
+import com.example.demo.dto.User7;
 import com.example.demo.model.Person;
 import com.example.demo.dto.City;
 import com.example.demo.repositories.CityRepository;
+import com.example.demo.repositories.PersonRepository;
+import com.example.demo.services.LoginService;
 import com.example.demo.services.PersonService;
 import com.example.demo.services.ReverseService;
 // import com.google.gson.JsonObject;
@@ -41,12 +46,14 @@ public class BackController {
 
     @Autowired
     ReverseService reverseService;
-    
     @Autowired
     CityRepository repo_city;
-
     @Autowired
     PersonService person_service;
+    @Autowired
+    PersonRepository person_repositorio;
+    @Autowired
+    LoginService login_Service;
 
     @GetMapping("/reverse/{word}")
     public Reverse reverse(@PathVariable String word){
@@ -180,6 +187,30 @@ public class BackController {
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
+    public boolean validatePass(String pass){
+        Boolean temMinuscula = pass.chars().anyMatch(Character::isLowerCase);
+        Boolean temMaiuscula = pass.chars().anyMatch(Character::isUpperCase);
+        Boolean temNumero = pass.chars().anyMatch(Character::isDigit);
+        Boolean temCaractereEspecial = pass.chars().anyMatch(c -> "!@#$%^&*()_+{}[]|:;,.<>?".indexOf(c) >= 0);
+
+        if(!temMinuscula || !temMaiuscula || !temNumero || !temCaractereEspecial || pass.length() < 4){
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean validateEmail(String email){
+        int atIndex = email.indexOf('@');
+        int dotIndex = email.lastIndexOf('.');
+        
+        if (atIndex < 1 || dotIndex < atIndex + 2 || dotIndex >= email.length() - 1) {
+            return false;
+        }
+
+        return true;
+    }
+
     @PostMapping("/create")
     public String createAccount(@RequestBody PersonDto person){
 
@@ -187,13 +218,12 @@ public class BackController {
             return "Preencha todos os campos!";
         }
 
-        Boolean temMinuscula = person.password().chars().anyMatch(Character::isLowerCase);
-        Boolean temMaiuscula = person.password().chars().anyMatch(Character::isUpperCase);
-        Boolean temNumero = person.password().chars().anyMatch(Character::isDigit);
-        Boolean temCaractereEspecial = person.password().chars().anyMatch(c -> "!@#$%^&*()_+{}[]|:;,.<>?".indexOf(c) >= 0);
-
-        if(!temMinuscula || !temMaiuscula || !temNumero || !temCaractereEspecial || person.password().length() < 4){
+        if(!validatePass(person.password())){
             return "Sua senha deve conter ao menos 4 caracteres entre eles numeros, letras maiusculas, minusculas e caracteres especiais.";
+        }
+        
+        if (!validateEmail(person.email())) {
+            return "Email inválido! Modelo esperado: a@b.z";
         }
 
         Person person_model = new Person();
@@ -204,6 +234,62 @@ public class BackController {
         person_service.savePerson(person_model);
 
         return "Conta criada com sucesso!";
+    }
+
+    @PatchMapping("/changepassword")
+    public ResponseEntity<String> atualizarSenha(@RequestBody User7 user){
+
+        if(!user.newPassword().equals(user.repeatPassword())){
+            return new ResponseEntity<>("Senhas não correspondem", HttpStatus.BAD_REQUEST);
+        }
+        
+        if(!validatePass(user.newPassword())){
+            return new ResponseEntity<>("Sua nova senha deve conter ao menos 4 caracteres entre eles numeros, letras maiusculas, minusculas e caracteres especiais.", HttpStatus.BAD_REQUEST);
+        }
+        
+        Person person = person_repositorio.findByName(user.username());
+
+        if(!user.password().equals(person.getPass())){
+            return new ResponseEntity<>("Senha incorreta", HttpStatus.BAD_REQUEST);
+        }
+        
+        if(person.equals(null)){
+            return new ResponseEntity<>("Usuario não encontrado", HttpStatus.BAD_REQUEST);
+        }
+
+        person.setPass(user.newPassword());
+        person_service.savePerson(person);
+
+        return new ResponseEntity<>("Senha alterada com sucesso!", HttpStatus.OK);
+
+    }
+
+    @PostMapping("/user")
+    public ResponseEntity<String> createUser(@RequestBody PersonDto person){
+        if(person.email() == null || person.password() == null || person.username() == null){
+            return new ResponseEntity<>("Preencha todos os campos!", HttpStatus.BAD_REQUEST);
+        }
+
+        if(!validatePass(person.password())){
+            return new ResponseEntity<>("Sua senha deve conter ao menos 4 caracteres entre eles numeros, letras maiusculas, minusculas e caracteres especiais.", HttpStatus.BAD_REQUEST);
+        }
+        
+        if (!validateEmail(person.email())) {
+            return new ResponseEntity<>("Email inválido! Modelo esperado: a@b.z", HttpStatus.BAD_REQUEST);
+        }
+
+        person_service.createPerson(person.email(), person.password(), person.username());
+
+        return new ResponseEntity<>("Usuario cadastrado! ", HttpStatus.OK);
+    } 
+
+    @PostMapping("/login")
+    public ResponseEntity<Token> login(@RequestBody Login login){
+        int result = login_Service.login(login.login(), login.password());
+        if(result == 1){
+            return new ResponseEntity<>(new Token("Usuario logado", "123"), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new Token("Login incorreto", "123"), HttpStatus.BAD_REQUEST);
     }
 
 }
