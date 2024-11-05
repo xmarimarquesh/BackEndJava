@@ -1,19 +1,29 @@
 package com.example.demo.controllers;
 
+import java.nio.charset.CharacterCodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
 
 import com.example.demo.dto.Calculo;
 import com.example.demo.dto.Curitiba;
 import com.example.demo.dto.Current;
+import com.example.demo.dto.PersonDto;
 import com.example.demo.dto.Reverse;
+import com.example.demo.model.Person;
+import com.example.demo.dto.City;
+import com.example.demo.repositories.CityRepository;
+import com.example.demo.services.PersonService;
 import com.example.demo.services.ReverseService;
 // import com.google.gson.JsonObject;
 // import com.google.gson.JsonParser;
@@ -31,6 +41,12 @@ public class BackController {
 
     @Autowired
     ReverseService reverseService;
+    
+    @Autowired
+    CityRepository repo_city;
+
+    @Autowired
+    PersonService person_service;
 
     @GetMapping("/reverse/{word}")
     public Reverse reverse(@PathVariable String word){
@@ -138,6 +154,56 @@ public class BackController {
         // if(!isCwb.get())
         //     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
+    }
+
+    @GetMapping("/cities")
+    public ResponseEntity<List<City>> getAllCity(){
+        List<City> list = new ArrayList<>();
+
+        list = repo_city.findAll()
+        .stream()
+        .map(city -> new City(city.getCidade(), city.getEstado(), city.getPais()))
+        .collect(Collectors.toList());
+        
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+
+    @GetMapping("/cities/{query}")
+    public ResponseEntity<List<City>> getAllCity(@PathVariable String query){
+        List<City> list = new ArrayList<>();
+
+        list = repo_city.findByCidadeOrEstadoOrPais(query, query, query)
+        .stream()
+        .map(city -> new City(city.getCidade(), city.getEstado(), city.getPais()))
+        .collect(Collectors.toList());
+        
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+
+    @PostMapping("/create")
+    public String createAccount(@RequestBody PersonDto person){
+
+        if(person.email() == null || person.password() == null || person.username() == null){
+            return "Preencha todos os campos!";
+        }
+
+        Boolean temMinuscula = person.password().chars().anyMatch(Character::isLowerCase);
+        Boolean temMaiuscula = person.password().chars().anyMatch(Character::isUpperCase);
+        Boolean temNumero = person.password().chars().anyMatch(Character::isDigit);
+        Boolean temCaractereEspecial = person.password().chars().anyMatch(c -> "!@#$%^&*()_+{}[]|:;,.<>?".indexOf(c) >= 0);
+
+        if(!temMinuscula || !temMaiuscula || !temNumero || !temCaractereEspecial || person.password().length() < 4){
+            return "Sua senha deve conter ao menos 4 caracteres entre eles numeros, letras maiusculas, minusculas e caracteres especiais.";
+        }
+
+        Person person_model = new Person();
+        person_model.setEmail(person.email());
+        person_model.setName(person.username());
+        person_model.setPass(person.password());
+
+        person_service.savePerson(person_model);
+
+        return "Conta criada com sucesso!";
     }
 
 }

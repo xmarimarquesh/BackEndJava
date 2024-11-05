@@ -1,5 +1,5 @@
-package com.example.demo.services;
+// package com.example.demo.services;
 
-public interface PasswordEncoderService {
-    String encode(String password);
-}
+// public interface PasswordEncoderService {
+//     String encode(String password);
+// }
