@@ -1,0 +1,66 @@
+@page "/create"
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 6 - Create User Account</PageTitle>
+
+<h1>Create User Account</h1>
+
+<hr>
+
+O Frontend manda um json com dados de um usuário que está criando uma conta <br>
+no sistema. O usuário deve possuir os campos 'username', 'password' e 'email'. <br>
+O backend deve receber esses dados no Endpoint /create e retornar uma mensagem <br>
+de sucesso, ou, se o usuário/email já está em uso. Também deve retornar se a <br>
+senha atinge os seguintes parâmetros de segurança: Possuir ao menos 8 caracteres; <br>
+Ter letras maiusculas; Ter letras minusculas; Ter números. Nenhum campo pode ser
+vazio ou menor de 4 caracteres. Valide se o email tem format xxx@yyy <br>
+A requisição deve ser um POST. <br>
+O retorno deve ser uma string simples com a mensagem. <br>
+
+<hr/>
+
+<div class="styleform">
+
+    <div class="rightcolumn">
+    
+        <label>Email</label>
+        <label>Username</label>
+        <label>password</label>
+    
+    </div>
+
+    <div class="leftcolumn">
+
+        <InputText @bind-Value="email" />
+        <InputText @bind-Value="username" />
+        <InputText @bind-Value="password" />
+    
+    </div>
+</div>
+
+<hr/>
+
+<button class="btn btn-primary" @onclick="Create">Create Account</button>
+
+@code {
+    string username, password, email;
+
+    async void Create()
+    {
+        var response = await Configs.Client.PostAsJsonAsync<UserData>(
+            $"/create", new UserData(username, password, email)
+        );
+        
+        if (response.StatusCode != HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", response);
+            return;
+        }
+        
+        var message = await response.Content.ReadAsStringAsync();
+        await js.InvokeVoidAsync("alert", message);
+    }
+
+    record UserData(string username, string password, string email);
+}

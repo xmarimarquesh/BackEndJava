@@ -1,0 +1,58 @@
+@page "/reverse"
+
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 1 - Reverse</PageTitle>
+
+<h1>Reverse</h1>
+
+<hr/>
+
+O frontend faz uma requisição para backend/reverse mandando uma string que <br>
+deve ser revertida e retornada no campo chamado result. Além disso, deve <br>
+existir um campo palindrome boleano que retorna se a palavra é um plaindromo <br>
+ou seja, é igual de traz pra frente.
+
+<hr/>
+
+<label>
+    Reverse: @reverse
+    @if (palindrome) {
+        <span> (Is a plaindrome!)</span>
+    }
+</label>
+
+<hr/>
+
+<label>
+    Word:
+    <InputText @bind-Value="word" />
+</label>
+
+<button class="btn btn-primary" @onclick="Apply">Reverse</button>
+
+@code {
+    string word = "subinoonibus";
+    string reverse = "subinoonibus";
+    bool palindrome = true;
+
+    async void Apply()
+    {
+        var response = await Configs.Client
+            .GetAsync($"/reverse/{word}");
+        
+        if (response.StatusCode != HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", "Response not OK (200) from server.");
+            return;
+        }
+
+        var obj = await response.Content.ReadFromJsonAsync<ReverseJson>();
+        this.reverse = obj.result;
+        this.palindrome = obj.palindrome;
+        StateHasChanged();
+    }
+
+    record ReverseJson(string result, bool palindrome);
+}

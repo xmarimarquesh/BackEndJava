@@ -1,0 +1,76 @@
+@page "/secure"
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 8 - Secure Register</PageTitle>
+
+<h1>Secure Register</h1>
+
+<hr>
+
+Os últimos 3 desafios estão intercorrelacionados então você precisará <br>
+resolver um em sequência do outro. <br>
+<br>
+
+Assim como o desafio 6, iremos cadastrar um usuário com email, username <br>
+e senha, antendendo todos os critérios da última etapa. Contudo, desta <br>
+vez, você deverá usar o bcrypt (slow hash) com salting para garantir um <br>
+bom armazenamento das senhas. A requisição de registro será essa: <br>
+<br>
+POST /user <br>
+{ <br>
+&emsp; "email" : value, <br>
+&emsp; "username" : value, <br>
+&emsp; "password" : value <br>
+} <br>
+<br>
+Desta vez, você não precisará validar se a senha atende os parâmetros <br>
+de segurança. Retorne uma mensagem de sucesso ou de erro com o código <br>
+correto.
+
+<hr/>
+
+<div class="styleform">
+
+    <div class="rightcolumn">
+    
+        <label>Email</label>
+        <label>Username</label>
+        <label>password</label>
+    
+    </div>
+
+    <div class="leftcolumn">
+
+        <InputText @bind-Value="email" />
+        <InputText @bind-Value="username" />
+        <InputText @bind-Value="password" />
+    
+    </div>
+</div>
+
+<hr/>
+
+<button class="btn btn-primary" @onclick="Create">Create Account</button>
+
+@code {
+    string username, password, email;
+
+    async void Create()
+    {
+        var response = await Configs.Client.PostAsJsonAsync<UserData>(
+            $"/user", new UserData(username, password, email)
+        );
+        
+        if (response.StatusCode != HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", await response.Content.ReadAsStringAsync());
+            return;
+        }
+        
+        var message = await response.Content.ReadAsStringAsync();
+        await js.InvokeVoidAsync("alert", message);
+    }
+
+    record UserData(string username, string password, string email);
+}

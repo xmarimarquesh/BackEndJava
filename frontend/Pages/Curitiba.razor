@@ -1,0 +1,55 @@
+@page "/curitiba"
+
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 4 - Curitiba Register</PageTitle>
+
+<h1>Curitiba Register</h1>
+
+<hr/>
+
+O frontend faz uma requisição para backend/curitiba mandando os parâmetros <br>
+nomeados 'cep' e 'cpf' que deseja validar. O backend deve enviar uma request <br>
+para https://viacep.com.br/ para descobrir se o cep pertence a curitiba. Se <br>
+não, o backend deve retornar uma mensagem de erro. Além disso, o backend deve <br>
+enviar um verificar se o cpf é válido. Você pode ter detalhes sobre como fazer <br>
+isso em: https://www.calculadorafacil.com.br/computacao/validar-cpf. Caso cpf <br>
+seja inválido, retorne uma mensagem para isso. Se ambos os dados forem <br>
+inconsistentes, retorne uma lista de mensagens. Valide também campos faltantes <br>
+ou vazios. <br>
+Se ambos os dados estiverem válidos retorne uma mensagem de sucesso para o <br>
+frontend.
+
+<hr/>
+
+<label>
+    CEP:
+    <InputText @bind-Value="cep" />
+</label>
+
+<label>
+    CPF:
+    <InputText @bind-Value="cpf" />
+</label>
+
+<hr/>
+
+<button class="btn btn-primary" @onclick="Validate">Validate</button>
+
+@code {
+    private string cep = "";
+    private string cpf = "";
+
+    private async void Validate()
+    {
+        var response = await Configs.Client
+            .GetAsync($"/curitiba?cep={cep}&cpf={cpf}");
+        
+        var obj = await response.Content.ReadFromJsonAsync<RegisterResult>();
+        await js.InvokeVoidAsync("alert", obj.message);
+    }
+
+    record RegisterResult(bool success, string message);
+}

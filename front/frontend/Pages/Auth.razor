@@ -1,0 +1,79 @@
+@page "/auth"
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 9 - Secure Authentification</PageTitle>
+
+<h1>Secure Authentification</h1>
+
+<hr/>
+
+Faça o login com o usuário criado no desafio anterior. No endpoint \login <br>
+você enviará um json por POST na seguinte estrututra: <br>
+<br>
+POST /login <br>
+{ <br>
+&emsp; "login" : value, <br>
+&emsp; "password" : value <br>
+} <br>
+<br>
+Onde o login pode ser tanto email quanto username. No backend você deverá <br>
+autentificar o usuário e retornar algum tipo de token em um Json no <br>
+seguinte formato: <br>
+<br>
+{ <br>
+&emsp; "message" : value, <br>
+&emsp; "token" : value <br>
+} <br>
+<br>
+Use qualquer técnica para criar o token, contudo priorize o uso de JWT. 
+
+<hr>
+
+<div class="styleform">
+
+    <div class="rightcolumn">
+    
+        <label>Username</label>
+        <label>Password</label>
+    
+    </div>
+
+    <div class="leftcolumn">
+        
+        <InputText @bind-Value="login" />
+        <InputText @bind-Value="password" />
+    
+    </div>
+</div>
+
+<hr/>
+
+Token: <InputText @bind-Value="token" />
+<button class="btn btn-primary" @onclick="Create">Create Account</button>
+
+@code {
+    string login, password, token;
+
+    async void Create()
+    {
+        var response = await Configs.Client.PostAsJsonAsync<UserData>(
+            $"/login", new UserData(login, password)
+        );
+        
+        if (response.StatusCode != HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", 
+                await response.Content.ReadAsStringAsync()
+            );
+            return;
+        }
+        
+        var obj = await response.Content.ReadFromJsonAsync<LoginResult>();
+        token = obj.token;
+        StateHasChanged();
+        await js.InvokeVoidAsync("alert", obj.message);
+    }
+    record UserData(string login, string password);
+    record LoginResult(string message, string token);
+}

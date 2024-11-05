@@ -1,0 +1,26 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Backend Training Frontend</h1>
+
+Welcome to backend challenges! <br>
+
+<label>
+    Set your backend url:
+    <InputText @bind-Value="code" @oninput="@(e => Configs.Backend = e.Value?.ToString() ?? "")" />
+</label>
+
+<br>
+
+<h3>Instruções gerais</h3>
+
+Se a instrução do desafio dizer que o "Frontend manda um parâmetro do tipo X para /Y", o backend
+deve ter um um endpoint /Y/{x}. Se ele dizer que "manda um parâmetro do tipo X com nome Z para /Y",
+então o backend deve ter /Y?Z=x. Se ele dizer que manda um json então os dados vão pelo corpo.
+
+Todas os métodos são GET, exceto quando dito o contrário.
+
+@code {
+    string code = Configs.Backend;
+}
