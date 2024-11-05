@@ -1,0 +1,85 @@
+@page "/jwt"
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 10 - JWT Validation</PageTitle>
+
+<h1>JWT Validation</h1>
+
+<hr/>
+
+Faça o cadastro de um produto com Titulo e Valor. Além disso, mande o <br>
+token jwt que foi dado no último exercício para validá-lo para fazer a <br>
+operação. Se o token não foi mandado ou é inválido o erro deve ser 401. <br>
+Caso o email do usuário não seja '@@loja.com', o erro deve ser 403. <br>
+A requisição tem a forma:
+<br>
+POST /product <br>
+{ <br>
+&emsp; "token" : jwt <br>
+&emsp; "titulo" : value, <br>
+&emsp; "valor" : value <br>
+} <br>
+
+<hr/>
+
+<div class="styleform">
+
+    <div class="rightcolumn">
+    
+        <label>Token</label>
+        <label>Titulo</label>
+        <label>Valor</label>
+    
+    </div>
+
+    <div class="leftcolumn">
+        
+        <InputText @bind-Value="token" />
+        <InputText @bind-Value="title" />
+        <InputText @bind-Value="value" />
+    
+    </div>
+</div>
+
+<hr/>
+
+<button class="btn btn-primary" @onclick="Add">Add Product</button>
+
+@code {
+    string token, title, value;
+
+    async void Add()
+    {
+        var response = await Configs.Client.PostAsJsonAsync<Product>(
+            $"/product", new Product(token, title, value)
+        );
+        
+        if (response.StatusCode == HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", 
+                "Produto cadastrado com sucesso."
+            );
+            return;
+        }
+        
+        if (response.StatusCode == HttpStatusCode.Forbidden) {
+            await js.InvokeVoidAsync("alert", 
+                "Você não tem permissão para essa funcionalidade."
+            );
+            return;
+        }
+        
+        if (response.StatusCode == HttpStatusCode.Unauthorized) {
+            await js.InvokeVoidAsync("alert", 
+                "Você não está devidamente logado no sistema."
+            );
+            return;
+        }
+
+        await js.InvokeVoidAsync("alert", 
+            $"Erro desconhecido ({response.StatusCode})."
+        );
+    }
+    record Product(string token, string title, string value);
+}

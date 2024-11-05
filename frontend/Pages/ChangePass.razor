@@ -1,0 +1,86 @@
+@page "/changepass"
+
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 7 - Change Pass</PageTitle>
+
+<h1>Change Pass</h1>
+
+<hr/>
+
+O Frontend manda um json com o login de usuário, senha deste usuário, uma nova <br>
+senha, e a repetição desta nova senha. O Json terá a seguinte estrutura: <br>
+{ <br>
+&emsp; "username" : 'valor' <br>
+&emsp; "password" : 'valor' <br>
+&emsp; "newPassword" : 'valor' <br>
+&emsp; "repeatPassword" : 'valor' <br>
+} <br>
+O endpoint /changepassword que recebe uma requisção PATCH, ou seja, atualiza os<br>
+dados de uma entidade, mas não todos os dados, apenas os socilitados, irá atualizar <br>
+a senha e retornar uma mensagem de sucesso. <br>
+Retorne mensagens de erro se qualquer uma das condições presentes no desafio 6 não se <br>
+cumprirem, se a senha for errada, se o usuário não existir ou se a senha for diferente <br>
+da repetição da senha. A mensagem deve ser retornada como uma string diretamente e não <br>
+um Json.
+
+<hr/>
+
+<div class="styleform">
+
+    <div class="rightcolumn">
+    
+        <label>Usuário</label>
+        <label>Senha</label>
+        <label>Nova Senha</label>
+        <label>Repita a Senha</label>
+    
+    </div>
+
+    <div class="leftcolumn">
+
+        <InputText @bind-Value="username" />
+        <InputText @bind-Value="password" />
+        <InputText @bind-Value="newPassword" />
+        <InputText @bind-Value="repeatPassword" />
+    
+    </div>
+</div>
+
+<hr/>
+
+<button class="btn btn-primary" @onclick="Update">Update</button>
+
+@code {
+    string username = "";
+    string password = "";
+    string newPassword = "";
+    string repeatPassword = "";
+    record PasswordUpdate(
+        string username,
+        string password,
+        string newPassword,
+        string repeatPassword
+    );
+
+    async void Update()
+    {
+        var response = await Configs.Client.PatchAsJsonAsync($"/changepassword", new PasswordUpdate(
+            username, password, newPassword, repeatPassword
+        ));
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest) {
+            await js.InvokeVoidAsync("alert", await response.Content.ReadAsStringAsync());
+            return;
+        }
+        
+        if (response.StatusCode != HttpStatusCode.OK) {
+            await js.InvokeVoidAsync("alert", $"erro desconhecido!\n\nstatus code: {(int)response.StatusCode}");
+        }
+        
+        var result = await response.Content.ReadAsStringAsync();
+        await js.InvokeVoidAsync("alert", result);
+    }
+}

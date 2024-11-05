@@ -1,0 +1,60 @@
+@page "/imaexp"
+
+@using System.Net
+
+@inject IJSRuntime js
+
+<PageTitle>Challenge 4 - Imaginary Exponential</PageTitle>
+
+<h1>Imaginary Exponential</h1>
+
+<hr/>
+
+O frontend faz uma requisição para backend/imaexp os parâmetros nomeados 'A' <br>
+e 'b'. O Backend deve calcular A*e^{ib} que pode ser calculado como: <br>
+e^{ib} = A * sin(b) + i * A * cos(b) <br>
+Note que como um número imaginário, o backend deve retornar um json com dois <br>
+campos: 'Re', repersentando o valor real e 'Im', representando o valor junto <br>
+do 'i', ou seja,  a parte imaginária. Simplificando: Re = A * sin(b) e Im = <br>
+A * cos(b).
+
+<hr/>
+
+
+<label>
+    Result: @result
+</label>
+
+<hr/>
+
+<label>
+    A:
+    <InputNumber @bind-Value="A" />
+</label>
+<br>
+
+<label>
+    b:
+    <InputNumber @bind-Value="b" />
+</label>
+
+<br> <br>
+<button class="btn btn-primary" @onclick="Calculate">Calculate</button>
+
+@code {
+    double A = 0.0;
+    double b = 0.0;
+    string result = "no computed yet.";
+
+    private async void Calculate()
+    {
+        var response = await Configs.Client
+            .GetAsync($"/imaexp?A={A}&b={b}");
+        
+        var obj = await response.Content.ReadFromJsonAsync<ImaginaryNumber>();
+        result = $"{obj.Re} + i {obj.Im}";
+        StateHasChanged();
+    }
+
+    record ImaginaryNumber(double Re, double Im);
+}

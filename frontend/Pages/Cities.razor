@@ -1,0 +1,65 @@
+@page "/cities"
+
+<PageTitle>Challenge 5 - Cities Index</PageTitle>
+
+<h1>Cities Index</h1>
+
+<hr/>
+
+O Frontend manda uma requisição com um parâmetro string que pesquisará em um <br>
+banco de dados. Abaixo você pode obter o script para os elementos dessa tabela: <br>
+
+<br>
+insert City values ('Brazil', 'Curitiba', 'PR'), <br>
+&emsp; ('Japan', 'Tokyo', 'KT'), <br>
+&emsp; ('United States', 'New York', 'NY'), <br>
+&emsp; ('Chéquia', 'Praga', 'PR') <br>
+
+<hr/>
+
+O backend deve retornar, no endpoint /cities/query, a lista de cidades cadastradas, <br>
+e o /cities deve retornar todas as cidades. 
+
+<table>
+
+    <tr>
+        <th>City</th>
+        <th>State</th>
+        <th>Country</th>
+    </tr>
+
+    @foreach (var city in cities)
+    {
+        <tr>
+            <td> @city.name </td>
+            <td> @city.state </td>
+            <td> @city.country </td>
+        </tr>
+    }
+
+</table>
+
+<hr/>
+
+<label>
+    Search:
+    <InputText @bind-Value="search" />
+</label>
+
+<button class="btn btn-primary" @onclick="Search">Search</button>
+
+@code {
+    string search = "";
+    List<City> cities = [];
+    record City(string name, string state, string country);
+
+    async void Search()
+    {
+        var response = string.IsNullOrEmpty(search) ?
+            await Configs.Client.GetAsync($"/cities") :
+            await Configs.Client.GetAsync($"/cities/{search}");
+        
+        cities = await response.Content.ReadFromJsonAsync<List<City>>();
+        StateHasChanged();
+    }
+}
