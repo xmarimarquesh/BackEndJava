@@ -1,5 +1,5 @@
 package com.example.demo.dto;
 
-public record Curitiba(
+public record CuritibaDto(
     String message
 ) {}

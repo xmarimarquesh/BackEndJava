@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-public record City(
+public record CityDto(
     String name,
     String state,
     String country
