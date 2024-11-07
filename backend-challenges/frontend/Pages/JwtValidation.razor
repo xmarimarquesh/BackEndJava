@@ -52,8 +52,10 @@ POST /product <br>
 
     async void Add()
     {
-        var response = await Configs.Client.PostAsJsonAsync<Product>(
-            $"/product", new Product(token, title, value)
+        var client = Configs.Client;
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+        var response = await client.PostAsJsonAsync<Product>(
+            $"/product", new Product(title, value)
         );
         
         if (response.StatusCode == HttpStatusCode.OK) {
@@ -81,5 +83,5 @@ POST /product <br>
             $"Erro desconhecido ({response.StatusCode})."
         );
     }
-    record Product(string token, string title, string value);
+    record Product(string title, string value);
 }

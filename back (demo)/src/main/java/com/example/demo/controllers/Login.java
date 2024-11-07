@@ -23,10 +23,12 @@ public class Login {
 
     @PostMapping
     public ResponseEntity<TokenLogin> login(@RequestBody LoginDto login){
-        int result = login_Service.login(login.login(), login.password());
-        if(result == 1){
-            return new ResponseEntity<>(new TokenLogin("Usuario logado", "123"), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(new TokenLogin("Login incorreto", "123"), HttpStatus.BAD_REQUEST);
+
+        String result = login_Service.login(login.login(), login.password());
+
+        if(result != null)
+            return new ResponseEntity<>(new TokenLogin("Usuario logado", result), HttpStatus.OK);
+        
+        return new ResponseEntity<>(new TokenLogin("Login incorreto", "null"), HttpStatus.BAD_REQUEST);
     }
 }
